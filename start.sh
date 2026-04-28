@@ -9,6 +9,7 @@ STATUSES="experimental stable sample"
 
 TOOL_MANIFESTS=()
 TOOL_LABELS=()
+SELECTED_MANIFEST=""
 
 has() {
   command -v "$1" >/dev/null 2>&1
@@ -176,6 +177,7 @@ list_tools() {
 }
 
 select_tool_manifest() {
+  SELECTED_MANIFEST=""
   load_tools
 
   if [ "${#TOOL_MANIFESTS[@]}" -eq 0 ]; then
@@ -206,7 +208,7 @@ select_tool_manifest() {
   i=0
   while [ "$i" -lt "${#TOOL_LABELS[@]}" ]; do
     if [ "${TOOL_LABELS[$i]}" = "$label" ]; then
-      printf "%s" "${TOOL_MANIFESTS[$i]}"
+      SELECTED_MANIFEST=${TOOL_MANIFESTS[$i]}
       return 0
     fi
     i=$((i + 1))
@@ -216,7 +218,8 @@ select_tool_manifest() {
 }
 
 run_tool() {
-  manifest=$(select_tool_manifest) || return
+  select_tool_manifest || return
+  manifest=$SELECTED_MANIFEST
   dir=$(dirname "$manifest")
   entry=$(json_value "$manifest" "entry")
   runtime=$(json_value "$manifest" "runtime")
