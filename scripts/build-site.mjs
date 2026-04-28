@@ -99,9 +99,22 @@ function main() {
     fs.mkdirSync(DOCS, { recursive: true });
   }
 
-  const payload = { repoBaseUrl: base, generatedAt: new Date().toISOString(), tools };
+  const rootReadme = path.join(ROOT, "README.md");
+  let home = { readmeHtml: "", toc: [] };
+  if (fs.existsSync(rootReadme)) {
+    const raw = fs.readFileSync(rootReadme, "utf8");
+    const parsed = mdToHtmlAndToc(raw);
+    home = { readmeHtml: parsed.html, toc: parsed.toc };
+  }
+
+  const payload = {
+    repoBaseUrl: base,
+    generatedAt: new Date().toISOString(),
+    tools,
+    home,
+  };
   fs.writeFileSync(OUT_JSON, JSON.stringify(payload, null, 2), "utf8");
-  console.log("Wrote", OUT_JSON, `(${tools.length} tools)`);
+  console.log("Wrote", OUT_JSON, `(${tools.length} tools + home readme)`);
 }
 
 main();

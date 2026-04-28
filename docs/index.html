@@ -10,7 +10,27 @@
     <a class="skip-link" href="#main">Skip to content</a>
     <div class="layout">
       <header class="topbar">
-        <a href="#/" class="brand">toolbox</a>
+        <div class="topbar-left">
+          <button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="nav-panel" aria-label="Open menu">
+            <span class="menu-toggle-bar" aria-hidden="true"></span>
+            <span class="menu-toggle-bar" aria-hidden="true"></span>
+            <span class="menu-toggle-bar" aria-hidden="true"></span>
+          </button>
+          <a href="#/home/tools" class="brand">toolbox</a>
+        </div>
+        <div class="topbar-search-wrap">
+          <label class="sr-only" for="tool-search">Search tools</label>
+          <input
+            type="search"
+            id="tool-search"
+            class="tool-search"
+            placeholder="Search name, description, tags…"
+            autocomplete="off"
+          />
+          <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" hidden>
+            ×
+          </button>
+        </div>
         <div class="topbar-actions">
           <label class="sr-only" for="theme-select">Theme</label>
           <select id="theme-select" aria-label="Theme">
@@ -20,20 +40,23 @@
           </select>
         </div>
       </header>
-      <aside class="sidebar" aria-label="Tools">
-        <label class="sr-only" for="tool-search">Search tools</label>
-        <input
-          type="search"
-          id="tool-search"
-          class="tool-search"
-          placeholder="Search name, description, tags…"
-          autocomplete="off"
-        />
-        <nav id="nav-tree" class="nav-tree"></nav>
-      </aside>
-      <main id="main" class="main"></main>
-      <aside id="right-rail" class="right-rail" aria-label="On this page"></aside>
+      <div class="layout-body">
+        <aside id="nav-panel" class="sidebar" aria-label="Site navigation">
+          <div class="sidebar-scroll">
+            <div id="sidebar-search-slot" class="sidebar-search-fallback" hidden></div>
+            <nav class="nav-home" id="nav-home" aria-label="Home">
+              <a href="#/home/tools" class="nav-home-link">Home</a>
+            </nav>
+            <nav id="nav-tree" class="nav-tree" aria-label="Tools"></nav>
+          </div>
+        </aside>
+        <main id="main" class="main" tabindex="-1"></main>
+        <aside id="right-rail" class="right-rail" aria-label="On this page">
+          <div class="right-rail-scroll" id="right-rail-scroll"></div>
+        </aside>
+      </div>
     </div>
+    <div class="nav-backdrop" id="nav-backdrop" hidden></div>
     <script src="./app.js"></script>
   </body>
 </html>

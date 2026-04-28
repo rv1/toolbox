@@ -1,4 +1,9 @@
-/* Chirpy-inspired, no external fonts — system stack only */
+/* Chirpy-inspired, no external fonts — system stack only.
+   UX testing: set document.documentElement.dataset.uxOff = space-separated flags to disable:
+   layout-scroll, home-tabs, categorized-home, topbar-search, search-clear, nav-home,
+   nav-indent, right-rail-blend, toc-offset, mobile-drawer, body-scroll-lock
+   Or localStorage toolbox-ux-flags JSON {"layout-scroll":false}
+   Or ?uxoff=layout-scroll,mobile-drawer */
 
 :root {
   color-scheme: light dark;
@@ -7,6 +12,7 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --header-h: 52px;
 }
 
 [data-theme="light"] {
@@ -85,6 +91,11 @@ body {
   font-size: 15px;
 }
 
+html:not([data-ux-off~="layout-scroll"]) body {
+  height: 100vh;
+  overflow: hidden;
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
@@ -120,28 +131,130 @@ a:hover {
   border: 0;
 }
 
+/* ----- Layout (v2: full-height columns, main scrolls) ----- */
+
 .layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+html:not([data-ux-off~="layout-scroll"]) .layout {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.layout-body {
   display: grid;
   grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(0, 220px);
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "top top top"
-    "side main right";
-  min-height: 100vh;
-  gap: 0;
+  grid-template-rows: 1fr;
+  flex: 1;
+  min-height: 0;
 }
 
 .topbar {
-  grid-area: top;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.65rem 1.25rem;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  min-height: var(--header-h);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  z-index: 30;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.menu-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.menu-toggle-bar {
+  display: block;
+  height: 2px;
+  width: 22px;
+  margin: 0 auto;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+.topbar-search-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.topbar-actions {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.tool-search {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+  padding-right: 2rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.search-clear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: -2.5rem;
+  z-index: 1;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  color: var(--text);
+  background: var(--code-bg);
+}
+
+html[data-ux-off~="search-clear"] .search-clear {
+  display: none !important;
+}
+
+html[data-ux-off~="search-clear"] .tool-search {
+  padding-right: 0.6rem;
 }
 
 .brand {
@@ -165,113 +278,100 @@ a:hover {
   color: var(--text);
 }
 
-.sidebar {
-  grid-area: side;
-  border-right: 1px solid var(--border);
-  background: var(--surface);
-  padding: 1rem 0.75rem 2rem;
-  position: sticky;
-  top: 48px;
-  align-self: start;
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-}
-
-.tool-search {
-  width: 100%;
-  font: inherit;
-  padding: 0.45rem 0.6rem;
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--text);
-}
-
-.nav-tree details {
-  border: none;
-  margin: 0 0 0.35rem;
-}
-
-.nav-tree summary {
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  list-style: none;
-  padding: 0.35rem 0.4rem;
-  border-radius: 6px;
-}
-
-.nav-tree summary::-webkit-details-marker {
+.nav-backdrop {
   display: none;
 }
 
-.nav-tree summary::before {
-  content: "";
-  display: inline-block;
-  width: 0.45em;
-  margin-right: 0.35rem;
-  border-left: 4px solid var(--muted);
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
-  transform: rotate(0deg);
-  transition: transform 0.12s ease;
+.sidebar {
+  grid-column: 1;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.nav-tree details[open] summary::before {
-  transform: rotate(90deg);
+.sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem 0.75rem 1.25rem;
+  -webkit-overflow-scrolling: touch;
 }
 
-.nav-tree ul {
-  list-style: none;
-  margin: 0.25rem 0 0.5rem;
-  padding: 0 0 0 0.35rem;
+.nav-home {
+  margin-bottom: 0.65rem;
 }
 
-.nav-tree li {
-  margin: 0;
-}
-
-.nav-tree a {
+.nav-home-link {
   display: block;
-  padding: 0.35rem 0.5rem;
+  padding: 0.4rem 0.5rem;
   border-radius: 6px;
-  color: var(--text);
+  font-weight: 600;
   font-size: 0.92rem;
+  color: var(--text);
 }
 
-.nav-tree a:hover {
+.nav-home-link:hover {
   background: var(--nav-active);
   text-decoration: none;
 }
 
-.nav-tree a.active {
+.nav-home-link.active {
   background: var(--nav-active);
-  font-weight: 600;
+}
+
+html[data-ux-off~="nav-home"] .nav-home {
+  display: none;
 }
 
 .main {
-  grid-area: main;
-  padding: 1.5rem 1.75rem 3rem;
-  max-width: 52rem;
-  justify-self: center;
+  grid-column: 2;
+  min-height: 0;
+  padding: 0;
+  max-width: none;
   width: 100%;
+  justify-self: stretch;
+  overflow-y: auto;
+  scroll-padding-top: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+html:not([data-ux-off~="layout-scroll"]) .main {
+  background: var(--bg);
+}
+
+html[data-ux-off~="toc-offset"] .main {
+  scroll-padding-top: 0;
+}
+
+.main-inner {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.75rem 3rem;
 }
 
 .right-rail {
-  grid-area: right;
+  grid-column: 3;
+  border-left: none;
+  background: var(--bg);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+html[data-ux-off~="right-rail-blend"] .right-rail {
   border-left: 1px solid var(--border);
   background: var(--surface);
+}
+
+.right-rail-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 1rem 1rem 2rem;
-  position: sticky;
-  top: 48px;
-  align-self: start;
-  max-height: calc(100vh - 48px);
-  overflow: auto;
   font-size: 0.88rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .right-rail h2 {
@@ -300,6 +400,82 @@ a:hover {
   color: var(--accent);
 }
 
+.nav-tree details {
+  border: none;
+  margin: 0 0 0.35rem;
+}
+
+.nav-tree summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  list-style: none;
+  padding: 0.35rem 0.4rem;
+  border-radius: 6px;
+}
+
+html[data-ux-off~="nav-indent"] .nav-tree ul {
+  padding-left: 0.35rem;
+}
+
+.nav-tree summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-tree summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.45em;
+  margin-right: 0.35rem;
+  border-left: 4px solid var(--muted);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  transform: rotate(0deg);
+  transition: transform 0.12s ease;
+}
+
+.nav-tree details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.nav-tree ul {
+  list-style: none;
+  margin: 0.25rem 0 0.5rem;
+  padding: 0 0 0 0.85rem;
+  border-left: 2px solid transparent;
+}
+
+html:not([data-ux-off~="nav-indent"]) .nav-tree ul {
+  padding-left: 1.1rem;
+  margin-left: 0.35rem;
+  border-left-color: var(--border);
+}
+
+.nav-tree li {
+  margin: 0;
+}
+
+.nav-tree a {
+  display: block;
+  padding: 0.35rem 0.5rem 0.35rem 0.65rem;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.nav-tree a:hover {
+  background: var(--nav-active);
+  text-decoration: none;
+}
+
+.nav-tree a.active {
+  background: var(--nav-active);
+  font-weight: 600;
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -326,8 +502,53 @@ a:hover {
   margin-bottom: 1.25rem;
 }
 
+.home-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.home-tab {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.home-tab:hover {
+  border-color: var(--accent);
+}
+
+.home-tab[aria-selected="true"] {
+  background: var(--nav-active);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+html[data-ux-off~="home-tabs"] .home-tabs {
+  display: none;
+}
+
+.tool-category-section {
+  margin-bottom: 2rem;
+}
+
+.tool-category-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  scroll-margin-top: 12px;
+}
+
 .tool-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 0.75rem;
 }
 
@@ -363,6 +584,14 @@ a:hover {
   font-size: 0.92rem;
 }
 
+html[data-ux-off~="categorized-home"] .tool-category-section .tool-grid {
+  display: contents;
+}
+
+html[data-ux-off~="categorized-home"] .tool-category-title {
+  display: none;
+}
+
 .article-header h1 {
   margin: 0 0 0.5rem;
   font-size: 1.65rem;
@@ -393,6 +622,12 @@ a:hover {
 .prose h4 {
   margin: 1.5rem 0 0.65rem;
   line-height: 1.3;
+}
+
+html:not([data-ux-off~="toc-offset"]) .prose h2[id],
+html:not([data-ux-off~="toc-offset"]) .prose h3[id],
+html:not([data-ux-off~="toc-offset"]) .prose h4[id] {
+  scroll-margin-top: 1.25rem;
 }
 
 .prose p {
@@ -444,8 +679,174 @@ a:hover {
   color: var(--muted);
 }
 
+/* ----- Legacy layout (when layout-scroll disabled) ----- */
+
+html[data-ux-off~="layout-scroll"] body {
+  height: auto;
+  overflow: auto;
+}
+
+html[data-ux-off~="layout-scroll"] .layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(0, 220px);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "top top top"
+    "side main right";
+  min-height: 100vh;
+  height: auto;
+  overflow: visible;
+}
+
+html[data-ux-off~="layout-scroll"] .layout-body {
+  display: contents;
+}
+
+html[data-ux-off~="layout-scroll"] .topbar {
+  grid-area: top;
+  position: sticky;
+  top: 0;
+}
+
+html[data-ux-off~="layout-scroll"] .sidebar {
+  grid-area: side;
+  position: sticky;
+  top: 48px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+html[data-ux-off~="layout-scroll"] .main {
+  grid-area: main;
+  overflow: visible;
+  max-width: 52rem;
+  justify-self: center;
+}
+
+html[data-ux-off~="layout-scroll"] .main .main-inner {
+  padding: 1.5rem 1.75rem 3rem;
+}
+
+html[data-ux-off~="layout-scroll"] .right-rail {
+  grid-area: right;
+  position: sticky;
+  top: 48px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow: visible;
+}
+
+html[data-ux-off~="layout-scroll"] .right-rail-scroll {
+  overflow: auto;
+  max-height: calc(100vh - 52px);
+}
+
+/* ----- Legacy: search in sidebar ----- */
+
+.sidebar-search-fallback {
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-search-fallback[hidden] {
+  display: none !important;
+}
+
+html[data-ux-off~="topbar-search"] .topbar-search-wrap {
+  display: none;
+}
+
+html[data-ux-off~="topbar-search"] .sidebar-search-fallback:not([hidden]) {
+  display: block;
+}
+
+html[data-ux-off~="topbar-search"] .menu-toggle {
+  display: none !important;
+}
+
+/* ----- Mobile ----- */
+
 @media (max-width: 960px) {
-  .layout {
+  html:not([data-ux-off~="layout-scroll"]) .layout-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  html:not([data-ux-off~="layout-scroll"]) .main {
+    grid-column: 1;
+  }
+
+  html:not([data-ux-off~="layout-scroll"]) .right-rail {
+    grid-column: 1;
+    border-left: none;
+  }
+
+  /* Off-canvas sidebar: layout-scroll ON and mobile-drawer ON */
+  html:not([data-ux-off~="layout-scroll"]):not([data-ux-off~="mobile-drawer"]) .sidebar {
+    display: none;
+  }
+
+  html:not([data-ux-off~="layout-scroll"])[data-ux-off~="mobile-drawer"] .sidebar {
+    display: flex;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+
+  html:not([data-ux-off~="layout-scroll"]):not([data-ux-off~="mobile-drawer"]) .menu-toggle {
+    display: flex;
+  }
+
+  html[data-ux-off~="mobile-drawer"] .menu-toggle {
+    display: none !important;
+  }
+
+  html:not([data-ux-off~="mobile-drawer"]).drawer-open .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: var(--header-h);
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 25;
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  html:not([data-ux-off~="mobile-drawer"]).drawer-open .sidebar {
+    display: flex;
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    bottom: 0;
+    width: min(88vw, 300px);
+    z-index: 40;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+    animation: drawer-in 0.15s ease-out;
+  }
+
+  @keyframes drawer-in {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .topbar-search-wrap {
+    max-width: none;
+    flex: 1;
+  }
+}
+
+@media (max-width: 960px) {
+  html[data-ux-off~="layout-scroll"] .layout {
     grid-template-columns: 1fr;
     grid-template-areas:
       "top"
@@ -454,16 +855,14 @@ a:hover {
       "right";
   }
 
-  .sidebar,
-  .right-rail {
+  html[data-ux-off~="layout-scroll"] .sidebar,
+  html[data-ux-off~="layout-scroll"] .right-rail {
     position: static;
     max-height: none;
-    border-right: none;
-    border-left: none;
-    border-bottom: 1px solid var(--border);
+    overflow: visible;
   }
 
-  .right-rail {
-    border-bottom: none;
+  html[data-ux-off~="layout-scroll"] .main {
+    overflow: visible;
   }
 }
