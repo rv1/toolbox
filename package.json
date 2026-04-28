@@ -1,0 +1,9 @@
+{
+  "name": "toolbox",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "new": "node scripts/new-tool.mjs",
+    "build": "node scripts/build-site.mjs"
+  }
+}

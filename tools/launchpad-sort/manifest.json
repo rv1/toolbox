@@ -1,0 +1,8 @@
+{
+  "name": "Launchpad Sort",
+  "slug": "launchpad-sort",
+  "description": "Sorts the first page of macOS Launchpad alphabetically and moves folders to the end.",
+  "entry": "launchpad-sort.sh",
+  "tags": ["macos", "launchpad", "sqlite"],
+  "status": "experimental"
+}
