@@ -1,17 +1,7 @@
 (function () {
   "use strict";
 
-  /**
-   * UX testing: disable features via
-   * - localStorage key toolbox-ux-flags (JSON): {"layout-scroll": false}
-   * - URL ?uxoff=layout-scroll,mobile-drawer
-   * Tokens use hyphens: layout-scroll, home-tabs, categorized-home, topbar-search,
-   * search-clear, nav-home, nav-indent, right-rail-blend, toc-offset,
-   * mobile-drawer, body-scroll-lock
-   */
-
   const THEME_KEY = "toolbox-theme";
-  const UX_STORAGE_KEY = "toolbox-ux-flags";
 
   /** @type {{ repoBaseUrl: string, tools: any[], home?: { readmeHtml: string, toc: any[] } } | null} */
   let data = null;
@@ -21,66 +11,11 @@
     return document.querySelector(sel);
   }
 
-  function ux(flag) {
-    const off = (document.documentElement.getAttribute("data-ux-off") || "").split(/\s+/).filter(Boolean);
-    return off.indexOf(flag) === -1;
-  }
-
-  function applyUxFlags() {
-    const off = new Set();
-    try {
-      const stored = JSON.parse(localStorage.getItem(UX_STORAGE_KEY) || "{}");
-      Object.keys(stored).forEach(function (k) {
-        if (stored[k] === false) {
-          const norm = k.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-          off.add(norm);
-        }
-      });
-    } catch (_) {}
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("uxoff")) {
-      params.get("uxoff").split(",").forEach(function (s) {
-        const t = s.trim();
-        if (t) off.add(t);
-      });
-    }
-    document.documentElement.setAttribute("data-ux-off", Array.from(off).join(" "));
-    syncSearchPlacement();
-  }
-
-  function syncSearchPlacement() {
-    const wrap = $(".topbar-search-wrap");
-    const slot = $("#sidebar-search-slot");
-    const input = $("#tool-search");
-    const clearBtn = $("#search-clear");
-    if (!wrap || !slot || !input) return;
-
-    if (ux("topbar-search")) {
-      slot.hidden = true;
-      slot.innerHTML = "";
-      if (input.parentElement !== wrap) {
-        wrap.insertBefore(input, wrap.firstChild);
-      }
-      if (clearBtn && ux("search-clear") && clearBtn.parentElement !== wrap) {
-        wrap.appendChild(clearBtn);
-      }
-    } else {
-      slot.hidden = false;
-      slot.innerHTML = "";
-      slot.appendChild(input);
-      if (clearBtn && ux("search-clear")) {
-        slot.appendChild(clearBtn);
-      }
-    }
-    updateClearVisibility();
-  }
-
   function updateClearVisibility() {
     const input = $("#tool-search");
     const clearBtn = $("#search-clear");
     if (!input || !clearBtn) return;
-    const show = ux("search-clear") && input.value.trim().length > 0;
-    clearBtn.hidden = !show;
+    clearBtn.hidden = input.value.trim().length === 0;
   }
 
   function getTheme() {
@@ -168,13 +103,97 @@
   function scrollHeadingIntoView(el) {
     if (!el) return;
     const mainEl = $("#main");
-    if (ux("layout-scroll") && mainEl && mainEl.scrollHeight > mainEl.clientHeight + 1) {
+    if (mainEl && mainEl.scrollHeight > mainEl.clientHeight + 1) {
       const delta =
-        el.getBoundingClientRect().top - mainEl.getBoundingClientRect().top - (ux("toc-offset") ? 12 : 0);
+        el.getBoundingClientRect().top - mainEl.getBoundingClientRect().top - 12;
       mainEl.scrollBy({ top: delta, behavior: "smooth" });
     } else {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }
+
+  /**
+   * @param {HTMLElement} rail
+   * @param {Array<{ id: string, text: string, level: number }>} toc
+   * @param {string} heading
+   * @param {string} [emptyMsg]
+   */
+  function renderTocSection(rail, toc, heading, emptyMsg) {
+    const h2 = document.createElement("h2");
+    h2.textContent = heading;
+    rail.appendChild(h2);
+
+    const items = toc || [];
+    if (items.length === 0) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.style.margin = "0";
+      p.textContent = emptyMsg || "No headings.";
+      rail.appendChild(p);
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = "#" + encodeURIComponent(item.id);
+      a.textContent = item.text;
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        scrollHeadingIntoView(document.getElementById(item.id));
+      });
+      li.style.paddingLeft = (item.level - 1) * 0.5 + "rem";
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+    rail.appendChild(ul);
+  }
+
+  /**
+   * @param {HTMLElement} container
+   * @param {string[]} tags
+   * @param {{ interactive?: boolean }} opts
+   */
+  function renderTagPills(container, tags, opts) {
+    const interactive = opts && opts.interactive !== false;
+    const wrap = document.createElement("div");
+    wrap.className = "tag-list";
+
+    if (!tags || tags.length === 0) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.style.margin = "0";
+      p.style.fontSize = "0.88rem";
+      p.textContent = "No tags.";
+      container.appendChild(p);
+      return;
+    }
+
+    for (let i = 0; i < tags.length; i++) {
+      const tag = tags[i];
+      if (interactive) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tag";
+        b.textContent = tag;
+        b.addEventListener("click", function () {
+          filterText = tag;
+          const search = $("#tool-search");
+          if (search) search.value = tag;
+          updateClearVisibility();
+          render();
+        });
+        wrap.appendChild(b);
+      } else {
+        const s = document.createElement("span");
+        s.className = "tag";
+        s.textContent = tag;
+        wrap.appendChild(s);
+      }
+    }
+    container.appendChild(wrap);
   }
 
   function renderNav() {
@@ -194,14 +213,6 @@
         setRouteHomeTools();
         closeDrawer();
       };
-    }
-
-    if (!ux("nav-home")) {
-      const nh = $("#nav-home");
-      if (nh) nh.hidden = true;
-    } else {
-      const nh = $("#nav-home");
-      if (nh) nh.hidden = false;
     }
 
     for (let gi = 0; gi < groups.length; gi++) {
@@ -244,110 +255,19 @@
     }
   }
 
-  function renderRightRailTool(tool) {
+  /** Tool detail: right rail = TOC only */
+  function renderRightRailToolToc(tool) {
     const rail = $("#right-rail-scroll");
     if (!rail) return;
     rail.innerHTML = "";
-
-    const hToc = document.createElement("h2");
-    hToc.textContent = "On this page";
-    rail.appendChild(hToc);
-
-    const toc = tool.toc || [];
-    if (toc.length === 0) {
-      const p = document.createElement("p");
-      p.className = "muted";
-      p.style.margin = "0";
-      p.textContent = "No headings in README.";
-      rail.appendChild(p);
-    } else {
-      const ul = document.createElement("ul");
-      for (let i = 0; i < toc.length; i++) {
-        const item = toc[i];
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = "#" + encodeURIComponent(item.id);
-        a.textContent = item.text;
-        a.addEventListener("click", function (e) {
-          e.preventDefault();
-          const el = document.getElementById(item.id);
-          scrollHeadingIntoView(el);
-        });
-        li.style.paddingLeft = (item.level - 1) * 0.5 + "rem";
-        li.appendChild(a);
-        ul.appendChild(li);
-      }
-      rail.appendChild(ul);
-    }
-
-    const hTags = document.createElement("h2");
-    hTags.textContent = "Tags";
-    rail.appendChild(hTags);
-
-    const wrap = document.createElement("div");
-    wrap.className = "tag-list";
-    const tags = tool.tags || [];
-    if (tags.length === 0) {
-      const p = document.createElement("p");
-      p.className = "muted";
-      p.style.margin = "0";
-      p.textContent = "No tags.";
-      rail.appendChild(p);
-    } else {
-      for (let i = 0; i < tags.length; i++) {
-        const tag = tags[i];
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "tag";
-        b.textContent = tag;
-        b.addEventListener("click", function () {
-          filterText = tag;
-          const search = $("#tool-search");
-          if (search) search.value = tag;
-          updateClearVisibility();
-          render();
-        });
-        wrap.appendChild(b);
-      }
-      rail.appendChild(wrap);
-    }
+    renderTocSection(rail, tool.toc || [], "On this page", "No headings in README.");
   }
 
   function renderRightRailHomeReadme(homeToc) {
     const rail = $("#right-rail-scroll");
     if (!rail) return;
     rail.innerHTML = "";
-
-    const hToc = document.createElement("h2");
-    hToc.textContent = "On this page";
-    rail.appendChild(hToc);
-
-    const toc = homeToc || [];
-    if (toc.length === 0) {
-      const p = document.createElement("p");
-      p.className = "muted";
-      p.style.margin = "0";
-      p.textContent = "No headings.";
-      rail.appendChild(p);
-    } else {
-      const ul = document.createElement("ul");
-      for (let i = 0; i < toc.length; i++) {
-        const item = toc[i];
-        const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = "#" + encodeURIComponent(item.id);
-        a.textContent = item.text;
-        a.addEventListener("click", function (e) {
-          e.preventDefault();
-          const el = document.getElementById(item.id);
-          scrollHeadingIntoView(el);
-        });
-        li.style.paddingLeft = (item.level - 1) * 0.5 + "rem";
-        li.appendChild(a);
-        ul.appendChild(li);
-      }
-      rail.appendChild(ul);
-    }
+    renderTocSection(rail, homeToc || [], "On this page", "No headings.");
   }
 
   function renderRightRailHomeTools(groups) {
@@ -377,8 +297,7 @@
       a.textContent = intentLabel(intent);
       a.addEventListener("click", function (e) {
         e.preventDefault();
-        const el = document.getElementById("intent-" + intent);
-        scrollHeadingIntoView(el);
+        scrollHeadingIntoView(document.getElementById("intent-" + intent));
       });
       li.appendChild(a);
       ul.appendChild(li);
@@ -406,54 +325,26 @@
       "Personal toolbox — browse by intent or search. Data is generated from manifests and READMEs in the repo.";
     container.appendChild(lead);
 
-    if (ux("categorized-home")) {
-      const grouped = groupByIntent(tools);
-      for (let gi = 0; gi < grouped.length; gi++) {
-        const intent = grouped[gi][0];
-        const list = grouped[gi][1];
-        const sec = document.createElement("section");
-        sec.className = "tool-category-section";
-        sec.id = "intent-" + intent;
+    const grouped = groupByIntent(tools);
+    for (let gi = 0; gi < grouped.length; gi++) {
+      const intent = grouped[gi][0];
+      const list = grouped[gi][1];
+      const sec = document.createElement("section");
+      sec.className = "tool-category-section";
+      sec.id = "intent-" + intent;
 
-        const h2 = document.createElement("h2");
-        h2.className = "tool-category-title";
-        h2.textContent = intentLabel(intent);
-        sec.appendChild(h2);
+      const h2 = document.createElement("h2");
+      h2.className = "tool-category-title";
+      h2.textContent = intentLabel(intent);
+      sec.appendChild(h2);
 
-        const grid = document.createElement("div");
-        grid.className = "tool-grid";
-        const sorted = list.slice().sort(function (a, b) {
-          return a.slug.localeCompare(b.slug);
-        });
-        for (let i = 0; i < sorted.length; i++) {
-          const t = sorted[i];
-          const a = document.createElement("a");
-          a.className = "tool-card";
-          a.href = "#/tool/" + encodeURIComponent(t.slug);
-          a.addEventListener("click", function (e) {
-            e.preventDefault();
-            setRouteTool(t.slug);
-          });
-          const h = document.createElement("h2");
-          h.textContent = t.name || t.slug;
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          meta.textContent = [t.intent, t.runtime, t.status].filter(Boolean).join(" · ");
-          const p = document.createElement("p");
-          p.textContent = t.description || "";
-          a.appendChild(h);
-          a.appendChild(meta);
-          a.appendChild(p);
-          grid.appendChild(a);
-        }
-        sec.appendChild(grid);
-        container.appendChild(sec);
-      }
-    } else {
       const grid = document.createElement("div");
       grid.className = "tool-grid";
-      for (let i = 0; i < tools.length; i++) {
-        const t = tools[i];
+      const sorted = list.slice().sort(function (a, b) {
+        return a.slug.localeCompare(b.slug);
+      });
+      for (let i = 0; i < sorted.length; i++) {
+        const t = sorted[i];
         const a = document.createElement("a");
         a.className = "tool-card";
         a.href = "#/tool/" + encodeURIComponent(t.slug);
@@ -473,7 +364,8 @@
         a.appendChild(p);
         grid.appendChild(a);
       }
-      container.appendChild(grid);
+      sec.appendChild(grid);
+      container.appendChild(sec);
     }
 
     if (tools.length === 0) {
@@ -493,36 +385,33 @@
     inner.className = "main-inner";
 
     const home = data.home || { readmeHtml: "", toc: [] };
-    const tabsOn = ux("home-tabs");
-    const tabReadme = tabsOn && route.tab === "readme";
-    const tabTools = !tabsOn || route.tab !== "readme";
+    const tabReadme = route.tab === "readme";
+    const tabTools = route.tab !== "readme";
 
-    if (tabsOn) {
-      const tabs = document.createElement("div");
-      tabs.className = "home-tabs";
-      tabs.setAttribute("role", "tablist");
-      const btnTools = document.createElement("button");
-      btnTools.type = "button";
-      btnTools.className = "home-tab";
-      btnTools.setAttribute("role", "tab");
-      btnTools.setAttribute("aria-selected", !tabReadme ? "true" : "false");
-      btnTools.textContent = "Tools";
-      btnTools.addEventListener("click", function () {
-        setRouteHomeTools();
-      });
-      const btnReadme = document.createElement("button");
-      btnReadme.type = "button";
-      btnReadme.className = "home-tab";
-      btnReadme.setAttribute("role", "tab");
-      btnReadme.setAttribute("aria-selected", tabReadme ? "true" : "false");
-      btnReadme.textContent = "Readme";
-      btnReadme.addEventListener("click", function () {
-        setRouteHomeReadme();
-      });
-      tabs.appendChild(btnTools);
-      tabs.appendChild(btnReadme);
-      inner.appendChild(tabs);
-    }
+    const tabs = document.createElement("div");
+    tabs.className = "home-tabs";
+    tabs.setAttribute("role", "tablist");
+    const btnTools = document.createElement("button");
+    btnTools.type = "button";
+    btnTools.className = "home-tab";
+    btnTools.setAttribute("role", "tab");
+    btnTools.setAttribute("aria-selected", !tabReadme ? "true" : "false");
+    btnTools.textContent = "Tools";
+    btnTools.addEventListener("click", function () {
+      setRouteHomeTools();
+    });
+    const btnReadme = document.createElement("button");
+    btnReadme.type = "button";
+    btnReadme.className = "home-tab";
+    btnReadme.setAttribute("role", "tab");
+    btnReadme.setAttribute("aria-selected", tabReadme ? "true" : "false");
+    btnReadme.textContent = "Readme";
+    btnReadme.addEventListener("click", function () {
+      setRouteHomeReadme();
+    });
+    tabs.appendChild(btnTools);
+    tabs.appendChild(btnReadme);
+    inner.appendChild(tabs);
 
     const tools = data.tools.filter(matchesFilter);
 
@@ -530,10 +419,7 @@
       appendToolsSections(inner, tools);
     }
 
-    if (!tabsOn || tabReadme) {
-      if (!tabsOn && tabTools) {
-        inner.appendChild(document.createElement("hr"));
-      }
+    if (tabReadme) {
       const prose = document.createElement("article");
       prose.className = "prose";
       prose.innerHTML = home.readmeHtml || '<p class="muted">No repo readme in build.</p>';
@@ -544,58 +430,11 @@
     document.title = "toolbox";
   }
 
-  function renderMain() {
-    const main = $("#main");
-    if (!main || !data) return;
-    normalizeHash();
-    const route = parseRoute();
-
-    if (route.view === "home") {
-      const filtered = data.tools.filter(matchesFilter);
-      const groups = groupByIntent(filtered);
-
-      if (!ux("home-tabs")) {
-        renderRightRailHomeTools(groups);
-        renderHomeMain({ view: "home", tab: "tools" });
-        main.scrollTop = 0;
-        return;
-      }
-
-      if (route.tab === "readme") {
-        renderRightRailHomeReadme((data.home && data.home.toc) || []);
-      } else {
-        renderRightRailHomeTools(groups);
-      }
-      renderHomeMain(route);
-      main.scrollTop = 0;
-      return;
-    }
-
-    const tool = data.tools.find(function (t) {
-      return t.slug === route.slug;
-    });
-    if (!tool) {
-      renderRightRailPlaceholder("Select a tool or search.");
-      main.innerHTML = "";
-      const inner = document.createElement("div");
-      inner.className = "main-inner";
-      inner.innerHTML =
-        "<p>Tool not found.</p><p><a href=\"#/home/tools\">← Home</a></p>";
-      inner.querySelector("a").addEventListener("click", function (e) {
-        e.preventDefault();
-        setRouteHomeTools();
-      });
-      main.appendChild(inner);
-      document.title = "Not found · toolbox";
-      return;
-    }
-
-    renderRightRailTool(tool);
-    main.innerHTML = "";
-
-    const inner = document.createElement("div");
-    inner.className = "main-inner";
-
+  /**
+   * @param {HTMLElement} inner
+   * @param {any} tool
+   */
+  function renderToolArticle(inner, tool) {
     const header = document.createElement("header");
     header.className = "article-header";
     const h1 = document.createElement("h1");
@@ -615,6 +454,12 @@
       escapeHtml(tool.status) +
       "</span>";
     header.appendChild(metaRow);
+
+    const tagHost = document.createElement("div");
+    tagHost.className = "article-tags";
+    renderTagPills(tagHost, tool.tags || [], { interactive: true });
+    header.appendChild(tagHost);
+
     inner.appendChild(header);
 
     const prose = document.createElement("article");
@@ -647,6 +492,53 @@
     }
     src.appendChild(ul);
     inner.appendChild(src);
+  }
+
+  function renderMain() {
+    const main = $("#main");
+    if (!main || !data) return;
+    normalizeHash();
+    const route = parseRoute();
+
+    if (route.view === "home") {
+      const filtered = data.tools.filter(matchesFilter);
+      const groups = groupByIntent(filtered);
+
+      if (route.tab === "readme") {
+        renderRightRailHomeReadme((data.home && data.home.toc) || []);
+      } else {
+        renderRightRailHomeTools(groups);
+      }
+      renderHomeMain(route);
+      main.scrollTop = 0;
+      return;
+    }
+
+    const tool = data.tools.find(function (t) {
+      return t.slug === route.slug;
+    });
+    if (!tool) {
+      renderRightRailPlaceholder("Select a tool or search.");
+      main.innerHTML = "";
+      const inner = document.createElement("div");
+      inner.className = "main-inner";
+      inner.innerHTML =
+        "<p>Tool not found.</p><p><a href=\"#/home/tools\">← Home</a></p>";
+      inner.querySelector("a").addEventListener("click", function (e) {
+        e.preventDefault();
+        setRouteHomeTools();
+      });
+      main.appendChild(inner);
+      document.title = "Not found · toolbox";
+      return;
+    }
+
+    renderRightRailToolToc(tool);
+    main.innerHTML = "";
+
+    const inner = document.createElement("div");
+    inner.className = "main-inner";
+    renderToolArticle(inner, tool);
 
     main.appendChild(inner);
     document.title = (tool.name || tool.slug) + " · toolbox";
@@ -662,7 +554,6 @@
   }
 
   function render() {
-    applyUxFlags();
     renderNav();
     renderMain();
   }
@@ -676,9 +567,7 @@
     const bd = $("#nav-backdrop");
     if (btn) btn.setAttribute("aria-expanded", "false");
     if (bd) bd.hidden = true;
-    if (ux("mobile-drawer") && ux("body-scroll-lock")) {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = "";
   }
 
   function openDrawer() {
@@ -688,9 +577,7 @@
     const bd = $("#nav-backdrop");
     if (btn) btn.setAttribute("aria-expanded", "true");
     if (bd) bd.hidden = false;
-    if (ux("mobile-drawer") && ux("body-scroll-lock")) {
-      document.body.style.overflow = "hidden";
-    }
+    document.body.style.overflow = "hidden";
   }
 
   function toggleDrawer() {
@@ -700,20 +587,18 @@
 
   async function load() {
     normalizeHash();
-    applyUxFlags();
     const res = await fetch("./tools.json", { cache: "no-store" });
     if (!res.ok) {
       $("#main").innerHTML =
         '<div class="main-inner"><p class="muted">Could not load tools.json. Run <code>node scripts/build-site.mjs</code> then refresh.</p></div>';
       $("#nav-tree").innerHTML = "";
       const rr = $("#right-rail-scroll");
-      if (rr) {
-        rr.innerHTML = "";
-      }
+      if (rr) rr.innerHTML = "";
       return;
     }
     data = await res.json();
     render();
+    updateClearVisibility();
   }
 
   function initTheme() {
@@ -766,7 +651,6 @@
     closeDrawer();
   });
 
-  applyUxFlags();
   initTheme();
   load();
 })();

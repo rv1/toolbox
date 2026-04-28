@@ -18,19 +18,6 @@
           </button>
           <a href="#/home/tools" class="brand">toolbox</a>
         </div>
-        <div class="topbar-search-wrap">
-          <label class="sr-only" for="tool-search">Search tools</label>
-          <input
-            type="search"
-            id="tool-search"
-            class="tool-search"
-            placeholder="Search name, description, tags…"
-            autocomplete="off"
-          />
-          <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" hidden>
-            ×
-          </button>
-        </div>
         <div class="topbar-actions">
           <label class="sr-only" for="theme-select">Theme</label>
           <select id="theme-select" aria-label="Theme">
@@ -43,17 +30,32 @@
       <div class="layout-body">
         <aside id="nav-panel" class="sidebar" aria-label="Site navigation">
           <div class="sidebar-scroll">
-            <div id="sidebar-search-slot" class="sidebar-search-fallback" hidden></div>
+            <div class="sidebar-search-row">
+              <label class="sr-only" for="tool-search">Search tools</label>
+              <input
+                type="text"
+                id="tool-search"
+                class="tool-search"
+                inputmode="search"
+                enterkeyhint="search"
+                placeholder="Search..."
+                autocomplete="off"
+                aria-label="Search tools"
+              />
+              <button type="button" id="search-clear" class="search-clear" aria-label="Clear search" hidden>×</button>
+            </div>
             <nav class="nav-home" id="nav-home" aria-label="Home">
               <a href="#/home/tools" class="nav-home-link">Home</a>
             </nav>
             <nav id="nav-tree" class="nav-tree" aria-label="Tools"></nav>
           </div>
         </aside>
-        <main id="main" class="main" tabindex="-1"></main>
-        <aside id="right-rail" class="right-rail" aria-label="On this page">
-          <div class="right-rail-scroll" id="right-rail-scroll"></div>
-        </aside>
+        <div class="content-stage">
+          <main id="main" class="main" tabindex="-1"></main>
+          <aside id="right-rail" class="right-rail" aria-label="On this page">
+            <div class="right-rail-scroll" id="right-rail-scroll"></div>
+          </aside>
+        </div>
       </div>
     </div>
     <div class="nav-backdrop" id="nav-backdrop" hidden></div>

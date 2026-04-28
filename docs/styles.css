@@ -1,9 +1,4 @@
-/* Chirpy-inspired, no external fonts — system stack only.
-   UX testing: set document.documentElement.dataset.uxOff = space-separated flags to disable:
-   layout-scroll, home-tabs, categorized-home, topbar-search, search-clear, nav-home,
-   nav-indent, right-rail-blend, toc-offset, mobile-drawer, body-scroll-lock
-   Or localStorage toolbox-ux-flags JSON {"layout-scroll":false}
-   Or ?uxoff=layout-scroll,mobile-drawer */
+/* Chirpy-inspired, no external fonts — system stack only */
 
 :root {
   color-scheme: light dark;
@@ -13,6 +8,7 @@
   --radius: 10px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   --header-h: 52px;
+  --toc-w: 13rem;
 }
 
 [data-theme="light"] {
@@ -89,10 +85,12 @@ body {
   color: var(--text);
   line-height: 1.55;
   font-size: 15px;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
-html:not([data-ux-off~="layout-scroll"]) body {
-  height: 100vh;
+body.drawer-open {
   overflow: hidden;
 }
 
@@ -131,16 +129,9 @@ a:hover {
   border: 0;
 }
 
-/* ----- Layout (v2: full-height columns, main scrolls) ----- */
-
 .layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-html:not([data-ux-off~="layout-scroll"]) .layout {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -148,7 +139,7 @@ html:not([data-ux-off~="layout-scroll"]) .layout {
 
 .layout-body {
   display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(0, 220px);
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
   grid-template-rows: 1fr;
   flex: 1;
   min-height: 0;
@@ -158,6 +149,7 @@ html:not([data-ux-off~="layout-scroll"]) .layout {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   padding: 0.5rem 1rem;
   min-height: var(--header-h);
@@ -173,19 +165,31 @@ html:not([data-ux-off~="layout-scroll"]) .layout {
   flex-shrink: 0;
 }
 
-.menu-toggle {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
+.topbar-actions {
+  flex-shrink: 0;
+}
+
+@media (min-width: 961px) {
+  .menu-toggle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
 }
 
 .menu-toggle:focus-visible {
@@ -200,61 +204,6 @@ html:not([data-ux-off~="layout-scroll"]) .layout {
   margin: 0 auto;
   background: currentColor;
   border-radius: 1px;
-}
-
-.topbar-search-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-  max-width: 36rem;
-  margin: 0 auto;
-}
-
-.topbar-actions {
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.tool-search {
-  flex: 1;
-  min-width: 0;
-  font: inherit;
-  padding: 0.45rem 0.6rem;
-  padding-right: 2rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  color: var(--text);
-}
-
-.search-clear {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  margin-left: -2.5rem;
-  z-index: 1;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.search-clear:hover {
-  color: var(--text);
-  background: var(--code-bg);
-}
-
-html[data-ux-off~="search-clear"] .search-clear {
-  display: none !important;
-}
-
-html[data-ux-off~="search-clear"] .tool-search {
-  padding-right: 0.6rem;
 }
 
 .brand {
@@ -299,6 +248,45 @@ html[data-ux-off~="search-clear"] .tool-search {
   -webkit-overflow-scrolling: touch;
 }
 
+.sidebar-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-search-row .tool-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-search {
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.search-clear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  color: var(--text);
+  background: var(--code-bg);
+}
+
 .nav-home {
   margin-bottom: 0.65rem;
 }
@@ -321,28 +309,26 @@ html[data-ux-off~="search-clear"] .tool-search {
   background: var(--nav-active);
 }
 
-html[data-ux-off~="nav-home"] .nav-home {
-  display: none;
+.content-stage {
+  grid-column: 2;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
 }
 
 .main {
-  grid-column: 2;
+  height: 100%;
   min-height: 0;
   padding: 0;
-  max-width: none;
-  width: 100%;
-  justify-self: stretch;
+  margin: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   scroll-padding-top: 12px;
   -webkit-overflow-scrolling: touch;
-}
-
-html:not([data-ux-off~="layout-scroll"]) .main {
   background: var(--bg);
-}
-
-html[data-ux-off~="toc-offset"] .main {
-  scroll-padding-top: 0;
+  padding-right: var(--toc-w);
+  box-sizing: border-box;
 }
 
 .main-inner {
@@ -352,26 +338,26 @@ html[data-ux-off~="toc-offset"] .main {
 }
 
 .right-rail {
-  grid-column: 3;
-  border-left: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--toc-w);
+  margin: 0;
+  padding: 0;
+  border: none;
   background: var(--bg);
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-html[data-ux-off~="right-rail-blend"] .right-rail {
-  border-left: 1px solid var(--border);
-  background: var(--surface);
+  display: block;
 }
 
 .right-rail-scroll {
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   overflow-y: auto;
-  padding: 1rem 1rem 2rem;
+  overflow-x: hidden;
+  padding: 1rem 0.75rem 2rem 1rem;
   font-size: 0.88rem;
   -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
 }
 
 .right-rail h2 {
@@ -417,10 +403,6 @@ html[data-ux-off~="right-rail-blend"] .right-rail {
   border-radius: 6px;
 }
 
-html[data-ux-off~="nav-indent"] .nav-tree ul {
-  padding-left: 0.35rem;
-}
-
 .nav-tree summary::-webkit-details-marker {
   display: none;
 }
@@ -444,14 +426,9 @@ html[data-ux-off~="nav-indent"] .nav-tree ul {
 .nav-tree ul {
   list-style: none;
   margin: 0.25rem 0 0.5rem;
-  padding: 0 0 0 0.85rem;
-  border-left: 2px solid transparent;
-}
-
-html:not([data-ux-off~="nav-indent"]) .nav-tree ul {
-  padding-left: 1.1rem;
+  padding: 0 0 0 1.1rem;
   margin-left: 0.35rem;
-  border-left-color: var(--border);
+  border-left: 2px solid var(--border);
 }
 
 .nav-tree li {
@@ -474,6 +451,13 @@ html:not([data-ux-off~="nav-indent"]) .nav-tree ul {
 .nav-tree a.active {
   background: var(--nav-active);
   font-weight: 600;
+}
+
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
 }
 
 .tag-list {
@@ -530,10 +514,6 @@ html:not([data-ux-off~="nav-indent"]) .nav-tree ul {
   font-weight: 600;
 }
 
-html[data-ux-off~="home-tabs"] .home-tabs {
-  display: none;
-}
-
 .tool-category-section {
   margin-bottom: 2rem;
 }
@@ -584,14 +564,6 @@ html[data-ux-off~="home-tabs"] .home-tabs {
   font-size: 0.92rem;
 }
 
-html[data-ux-off~="categorized-home"] .tool-category-section .tool-grid {
-  display: contents;
-}
-
-html[data-ux-off~="categorized-home"] .tool-category-title {
-  display: none;
-}
-
 .article-header h1 {
   margin: 0 0 0.5rem;
   font-size: 1.65rem;
@@ -605,7 +577,7 @@ html[data-ux-off~="categorized-home"] .tool-category-title {
   gap: 0.5rem 1rem;
   font-size: 0.88rem;
   color: var(--muted);
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.65rem;
 }
 
 .meta-row span strong {
@@ -624,9 +596,9 @@ html[data-ux-off~="categorized-home"] .tool-category-title {
   line-height: 1.3;
 }
 
-html:not([data-ux-off~="toc-offset"]) .prose h2[id],
-html:not([data-ux-off~="toc-offset"]) .prose h3[id],
-html:not([data-ux-off~="toc-offset"]) .prose h4[id] {
+.prose h2[id],
+.prose h3[id],
+.prose h4[id] {
   scroll-margin-top: 1.25rem;
 }
 
@@ -679,134 +651,30 @@ html:not([data-ux-off~="toc-offset"]) .prose h4[id] {
   color: var(--muted);
 }
 
-/* ----- Legacy layout (when layout-scroll disabled) ----- */
-
-html[data-ux-off~="layout-scroll"] body {
-  height: auto;
-  overflow: auto;
-}
-
-html[data-ux-off~="layout-scroll"] .layout {
-  display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(0, 220px);
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "top top top"
-    "side main right";
-  min-height: 100vh;
-  height: auto;
-  overflow: visible;
-}
-
-html[data-ux-off~="layout-scroll"] .layout-body {
-  display: contents;
-}
-
-html[data-ux-off~="layout-scroll"] .topbar {
-  grid-area: top;
-  position: sticky;
-  top: 0;
-}
-
-html[data-ux-off~="layout-scroll"] .sidebar {
-  grid-area: side;
-  position: sticky;
-  top: 48px;
-  align-self: start;
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-}
-
-html[data-ux-off~="layout-scroll"] .main {
-  grid-area: main;
-  overflow: visible;
-  max-width: 52rem;
-  justify-self: center;
-}
-
-html[data-ux-off~="layout-scroll"] .main .main-inner {
-  padding: 1.5rem 1.75rem 3rem;
-}
-
-html[data-ux-off~="layout-scroll"] .right-rail {
-  grid-area: right;
-  position: sticky;
-  top: 48px;
-  align-self: start;
-  max-height: calc(100vh - 48px);
-  overflow: visible;
-}
-
-html[data-ux-off~="layout-scroll"] .right-rail-scroll {
-  overflow: auto;
-  max-height: calc(100vh - 52px);
-}
-
-/* ----- Legacy: search in sidebar ----- */
-
-.sidebar-search-fallback {
-  margin-bottom: 0.75rem;
-}
-
-.sidebar-search-fallback[hidden] {
-  display: none !important;
-}
-
-html[data-ux-off~="topbar-search"] .topbar-search-wrap {
-  display: none;
-}
-
-html[data-ux-off~="topbar-search"] .sidebar-search-fallback:not([hidden]) {
-  display: block;
-}
-
-html[data-ux-off~="topbar-search"] .menu-toggle {
-  display: none !important;
-}
-
-/* ----- Mobile ----- */
-
 @media (max-width: 960px) {
-  html:not([data-ux-off~="layout-scroll"]) .layout-body {
+  .layout-body {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
   }
 
-  html:not([data-ux-off~="layout-scroll"]) .main {
-    grid-column: 1;
-  }
-
-  html:not([data-ux-off~="layout-scroll"]) .right-rail {
-    grid-column: 1;
-    border-left: none;
-  }
-
-  /* Off-canvas sidebar: layout-scroll ON and mobile-drawer ON */
-  html:not([data-ux-off~="layout-scroll"]):not([data-ux-off~="mobile-drawer"]) .sidebar {
+  .sidebar {
     display: none;
   }
 
-  html:not([data-ux-off~="layout-scroll"])[data-ux-off~="mobile-drawer"] .sidebar {
-    display: flex;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    width: 100%;
+  .content-stage {
+    grid-column: 1;
+    min-height: 0;
   }
 
-  .menu-toggle {
-    display: none;
+  .main {
+    padding-right: 0;
   }
 
-  html:not([data-ux-off~="layout-scroll"]):not([data-ux-off~="mobile-drawer"]) .menu-toggle {
-    display: flex;
-  }
-
-  html[data-ux-off~="mobile-drawer"] .menu-toggle {
+  .right-rail {
     display: none !important;
   }
 
-  html:not([data-ux-off~="mobile-drawer"]).drawer-open .nav-backdrop {
+  body.drawer-open .nav-backdrop {
     display: block;
     position: fixed;
     inset: 0;
@@ -818,7 +686,7 @@ html[data-ux-off~="topbar-search"] .menu-toggle {
     margin: 0;
   }
 
-  html:not([data-ux-off~="mobile-drawer"]).drawer-open .sidebar {
+  body.drawer-open .sidebar {
     display: flex;
     position: fixed;
     top: var(--header-h);
@@ -837,32 +705,5 @@ html[data-ux-off~="topbar-search"] .menu-toggle {
     to {
       transform: translateX(0);
     }
-  }
-
-  .topbar-search-wrap {
-    max-width: none;
-    flex: 1;
-  }
-}
-
-@media (max-width: 960px) {
-  html[data-ux-off~="layout-scroll"] .layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "top"
-      "side"
-      "main"
-      "right";
-  }
-
-  html[data-ux-off~="layout-scroll"] .sidebar,
-  html[data-ux-off~="layout-scroll"] .right-rail {
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-
-  html[data-ux-off~="layout-scroll"] .main {
-    overflow: visible;
   }
 }
