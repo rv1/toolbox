@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>toolbox</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <a class="brand" href="#/">toolbox</a>
+        <label class="search-label" for="search">Search</label>
+        <input id="search" class="search" type="search" placeholder="Filter tools">
+        <nav id="nav" class="nav" aria-label="Tools"></nav>
+      </aside>
+
+      <main id="content" class="content" tabindex="-1"></main>
+
+      <aside class="toc" aria-label="Table of contents">
+        <div class="toc-title">On This Page</div>
+        <nav id="toc"></nav>
+      </aside>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

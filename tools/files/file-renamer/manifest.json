@@ -1,0 +1,10 @@
+{
+  "name": "File Renamer",
+  "slug": "file-renamer",
+  "intent": "files",
+  "description": "Dry-run file listing starter for a future rename workflow.",
+  "entry": "file-renamer.sh",
+  "runtime": "bash",
+  "tags": ["files", "sample", "ai-generated"],
+  "status": "sample"
+}

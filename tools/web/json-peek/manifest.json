@@ -1,0 +1,10 @@
+{
+  "name": "JSON Peek",
+  "slug": "json-peek",
+  "intent": "web",
+  "description": "Prints top-level JSON keys with no dependencies.",
+  "entry": "json-peek.mjs",
+  "runtime": "node",
+  "tags": ["web", "json", "sample", "ai-generated"],
+  "status": "sample"
+}

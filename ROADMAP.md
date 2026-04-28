@@ -4,9 +4,6 @@ Optional future ideas. Do not implement unless asked.
 
 ## Later
 
-- Docker local preview.
-- Makefile shortcuts.
-- package.json aliases.
 - Richer Markdown rendering.
 - Better search.
 - Screenshots per tool.
@@ -14,3 +11,5 @@ Optional future ideas. Do not implement unless asked.
 - Tool test harness.
 - Tool install/uninstall conventions.
 - More tool intents if the current list becomes limiting.
+- Safer apply modes for tools that start as dry-run previews.
+- Optional metadata validation command.

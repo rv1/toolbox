@@ -1,0 +1,10 @@
+{
+  "name": "Git Sweep",
+  "slug": "git-sweep",
+  "intent": "dev",
+  "description": "Safe branch listing for the current Git repository.",
+  "entry": "git-sweep.sh",
+  "runtime": "bash",
+  "tags": ["dev", "git", "sample", "ai-generated"],
+  "status": "sample"
+}

@@ -79,6 +79,8 @@ GitHub Actions should generate the data during deploy.
 
 Local preview should be possible, but keep it lightweight.
 
+`docs/tools.json` is generated site data. Do not commit it unless there is a strong reason.
+
 ## UI direction
 
 Create a clean, minimal, Chirpy-inspired site.

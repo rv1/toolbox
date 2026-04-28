@@ -1,0 +1,10 @@
+{
+  "name": "Home Network",
+  "slug": "home-network",
+  "intent": "notes",
+  "description": "Readme-only checklist for home network notes.",
+  "entry": "",
+  "runtime": "readme",
+  "tags": ["notes", "network", "sample", "ai-generated"],
+  "status": "sample"
+}
