@@ -7,8 +7,8 @@ Optional future ideas. Do not implement unless asked.
 - Docker local preview.
 - Makefile shortcuts.
 - package.json aliases.
-- Richer Markdown rendering.
-- Better search.
+- Richer Markdown rendering (site generator uses a tiny subset today).
+- Better search (e.g. full-text across README bodies, not only names or tags).
 - Screenshots per tool.
 - Portfolio/about page.
 - Tool test harness.

@@ -1,0 +1,10 @@
+{
+  "name": "Git Sweep (sample)",
+  "slug": "git-sweep",
+  "intent": "dev",
+  "description": "Sample: if cwd is in a git repo, lists local branches only (read-only).",
+  "entry": "git-sweep.sh",
+  "runtime": "bash",
+  "tags": ["git", "sample", "ai-generated"],
+  "status": "sample"
+}

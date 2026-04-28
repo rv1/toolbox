@@ -1,0 +1,10 @@
+{
+  "name": "File Renamer (sample)",
+  "slug": "file-renamer",
+  "intent": "files",
+  "description": "Sample: asks for a folder and lists entries (does not rename or delete).",
+  "entry": "file-renamer.sh",
+  "runtime": "bash",
+  "tags": ["files", "sample", "ai-generated"],
+  "status": "sample"
+}

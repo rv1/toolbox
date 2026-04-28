@@ -1,0 +1,9 @@
+{
+  "name": "Home Chores (sample)",
+  "slug": "home-chores",
+  "intent": "notes",
+  "description": "Sample readme-only checklist for recurring home tasks.",
+  "runtime": "readme",
+  "tags": ["notes", "sample", "ai-generated"],
+  "status": "sample"
+}

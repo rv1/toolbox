@@ -1,0 +1,10 @@
+{
+  "name": "JSON Peek (sample)",
+  "slug": "json-peek",
+  "intent": "web",
+  "description": "Sample: Node script with no deps; prints sorted top-level keys of a JSON file.",
+  "entry": "json-peek.mjs",
+  "runtime": "node",
+  "tags": ["json", "node", "sample", "ai-generated"],
+  "status": "sample"
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>toolbox</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="layout">
+      <header class="topbar">
+        <a href="#/" class="brand">toolbox</a>
+        <div class="topbar-actions">
+          <label class="sr-only" for="theme-select">Theme</label>
+          <select id="theme-select" aria-label="Theme">
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </header>
+      <aside class="sidebar" aria-label="Tools">
+        <label class="sr-only" for="tool-search">Search tools</label>
+        <input
+          type="search"
+          id="tool-search"
+          class="tool-search"
+          placeholder="Search name, description, tags…"
+          autocomplete="off"
+        />
+        <nav id="nav-tree" class="nav-tree"></nav>
+      </aside>
+      <main id="main" class="main"></main>
+      <aside id="right-rail" class="right-rail" aria-label="On this page"></aside>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

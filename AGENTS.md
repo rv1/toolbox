@@ -36,16 +36,17 @@ Allowed starter intents:
 - `dev`
 - `web`
 - `notes`
+- `custom` (when nothing else fits)
 
 Each tool needs:
 
 - `README.md`
 - `manifest.json`
-- an entry file unless the tool is notes-only
+- an entry file unless the tool is readme-only (`runtime: "readme"` — no `entry` key)
 
 ## Manifest
 
-Required fields:
+Typical fields:
 
 ```json
 {
@@ -60,12 +61,14 @@ Required fields:
 }
 ```
 
+For readme-only tools, omit `entry` and set `"runtime": "readme"`.
+
 Rules:
 
 - Keep metadata minimal.
 - `tags` must be an array.
 - If an AI agent creates or substantially rewrites a tool, add `ai-generated` to tags.
-- If a tool is an example/demo, add `sample` to tags.
+- If a tool is an example or demo, add `sample` to tags.
 - Do not add authorship fields.
 - Do not add generated/manual fields.
 
@@ -73,11 +76,13 @@ Rules:
 
 The website must be generated from manifests and READMEs.
 
-Do not require generated site data to be committed.
+Do **not** commit generated `docs/tools.json` unless there is a strong reason (it is gitignored and produced by `scripts/build-site.mjs` locally and in CI).
 
 GitHub Actions should generate the data during deploy.
 
 Local preview should be possible, but keep it lightweight.
+
+Latest local preview: run `node scripts/build-site.mjs` then `node scripts/serve-site.mjs`.
 
 ## UI direction
 
@@ -85,12 +90,21 @@ Create a clean, minimal, Chirpy-inspired site.
 
 Useful ideas:
 
+- Responsive layout.
+- Minimalist Design.
+- Light/Dark/auto mode.
 - Left navigation.
 - Collapsible tool sections by intent.
 - Search or filter.
 - Tags.
 - Tool detail page.
-- Right-side table of contents from README headings on desktop.
+- Right-side table of contents from README headings on desktop when needed.
+- Right side section for tags under content.
 - Mobile-friendly layout.
 
 Do not use Jekyll unless explicitly asked.
+
+Investigate Chirpy source code and dev documentation for HTML styling inspiration
+
+- https://github.com/cotes2020/chirpy-static-assets
+- https://github.com/cotes2020/jekyll-theme-chirpy
