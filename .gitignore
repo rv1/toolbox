@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+._*
+
+# Local state
+.toolbox/
+logs/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies / generated output
+node_modules/
+dist/
+build/
+site/
+docs/tools.json
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
