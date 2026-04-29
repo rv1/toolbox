@@ -45,8 +45,13 @@
       return { view: "tool", slug: decodeURIComponent(parts[1]) };
     }
     if (parts[0] === "home") {
-      const tab = parts[1] === "readme" ? "readme" : "tools";
-      return { view: "home", tab: tab };
+      if (parts[1] === "readme") {
+        return { view: "home", tab: "readme" };
+      }
+      if (parts[1] === "tags") {
+        return { view: "home", tab: "tags" };
+      }
+      return { view: "home", tab: "tools" };
     }
     return { view: "home", tab: "tools" };
   }
@@ -57,6 +62,10 @@
 
   function setRouteHomeReadme() {
     window.location.hash = "#/home/readme";
+  }
+
+  function setRouteHomeTags() {
+    window.location.hash = "#/home/tags";
   }
 
   function setRouteTool(slug) {
@@ -97,6 +106,31 @@
     }
     return Array.from(map.entries()).sort(function (a, b) {
       return a[0].localeCompare(b[0]);
+    });
+  }
+
+  /**
+   * @param {any[]} tools
+   * @returns {{ tag: string, count: number, anchorId: string }[]}
+   */
+  function buildHomeTagIndex(tools) {
+    const m = new Map();
+    for (let ti = 0; ti < tools.length; ti++) {
+      const tags = tools[ti].tags || [];
+      for (let j = 0; j < tags.length; j++) {
+        const tag = tags[j];
+        m.set(tag, (m.get(tag) || 0) + 1);
+      }
+    }
+    const entries = Array.from(m.entries());
+    entries.sort(function (a, b) {
+      if (b[1] !== a[1]) {
+        return b[1] - a[1];
+      }
+      return a[0].localeCompare(b[0]);
+    });
+    return entries.map(function (e, i) {
+      return { tag: e[0], count: e[1], anchorId: "home-tag-" + i };
     });
   }
 
@@ -322,6 +356,45 @@
     rail.appendChild(hint);
   }
 
+  /**
+   * @param {{ tag: string, count: number, anchorId: string }[]} tagIndex
+   */
+  function renderRightRailHomeTags(tagIndex) {
+    const rail = $("#right-rail-scroll");
+    if (!rail) return;
+    rail.innerHTML = "";
+
+    const h = document.createElement("h2");
+    h.textContent = "On this page";
+    rail.appendChild(h);
+
+    if (!tagIndex || tagIndex.length === 0) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.style.margin = "0";
+      p.textContent = "No tags in the current tool list.";
+      rail.appendChild(p);
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    for (let i = 0; i < tagIndex.length; i++) {
+      const row = tagIndex[i];
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = "#" + row.anchorId;
+      a.textContent = row.tag + " (" + row.count + ")";
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        const el = document.getElementById(row.anchorId);
+        scrollHeadingIntoView(el);
+      });
+      li.appendChild(a);
+      ul.appendChild(li);
+    }
+    rail.appendChild(ul);
+  }
+
   function renderRightRailPlaceholder(msg) {
     const rail = $("#right-rail-scroll");
     if (!rail) return;
@@ -443,54 +516,129 @@
     }
   }
 
-  function renderHomeMain(route) {
+  /**
+   * @param {{ tag: string, count: number, anchorId: string }[]} tagIndex
+   */
+  function appendHomeTagsView(container, tagIndex) {
+    const lead = document.createElement("p");
+    lead.className = "home-lead";
+    lead.textContent =
+      "All tags in the current tool list. The number is how many tools use each tag.";
+    container.appendChild(lead);
+    if (!tagIndex || tagIndex.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No tags in the current tool list.";
+      container.appendChild(empty);
+      return;
+    }
+    const ul = document.createElement("ul");
+    ul.className = "home-tag-list";
+    for (let i = 0; i < tagIndex.length; i++) {
+      const row = tagIndex[i];
+      const li = document.createElement("li");
+      li.className = "home-tag-row";
+      li.id = row.anchorId;
+
+      const nameEl = document.createElement("span");
+      nameEl.className = "home-tag-name";
+      nameEl.textContent = row.tag;
+
+      const right = document.createElement("div");
+      right.className = "home-tag-row-right";
+      const countEl = document.createElement("span");
+      countEl.className = "home-tag-count";
+      countEl.setAttribute("aria-label", "Tools: " + row.count);
+      countEl.textContent = String(row.count);
+
+      const filterBtn = document.createElement("button");
+      filterBtn.type = "button";
+      filterBtn.className = "home-tag-filter-btn";
+      filterBtn.textContent = "Filter";
+      filterBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        filterText = row.tag;
+        const search = $("#tool-search");
+        if (search) {
+          search.value = row.tag;
+        }
+        updateClearVisibility();
+        setRouteHomeTools();
+        if (window.matchMedia("(max-width: 960px)").matches) {
+          setTimeout(function () {
+            openDrawer();
+            if (search) {
+              try {
+                search.focus({ preventScroll: true });
+              } catch (ex) {
+                search.focus();
+              }
+            }
+          }, 0);
+        }
+      });
+      right.appendChild(countEl);
+      right.appendChild(filterBtn);
+      li.appendChild(nameEl);
+      li.appendChild(right);
+      ul.appendChild(li);
+    }
+    container.appendChild(ul);
+  }
+
+  /**
+   * @param {{ view: 'home' }} route
+   * @param {{ filtered: any[], tagIndex: { tag: string, count: number, anchorId: string }[] }} homeContext
+   */
+  function renderHomeMain(route, homeContext) {
     const main = $("#main");
-    if (!main || !data) return;
+    if (!main || !data) {
+      return;
+    }
 
     main.innerHTML = "";
     const inner = document.createElement("div");
     inner.className = "main-inner";
 
     const home = data.home || { readmeHtml: "", toc: [] };
-    const tabReadme = route.tab === "readme";
-    const tabTools = route.tab !== "readme";
+    const tab = route.tab;
+    const filtered = homeContext.filtered;
+    const tagIndex = homeContext.tagIndex;
+
+    const activeFirst = [tab].concat(
+      ["tools", "readme", "tags"].filter(function (k) {
+        return k !== tab;
+      })
+    );
+    const tabLabel = { tools: "Tools", readme: "Readme", tags: "Tags" };
+    const goTab = { tools: setRouteHomeTools, readme: setRouteHomeReadme, tags: setRouteHomeTags };
 
     const tabs = document.createElement("div");
     tabs.className = "home-tabs";
     tabs.setAttribute("role", "tablist");
-    const btnTools = document.createElement("button");
-    btnTools.type = "button";
-    btnTools.className = "home-tab";
-    btnTools.setAttribute("role", "tab");
-    btnTools.setAttribute("aria-selected", !tabReadme ? "true" : "false");
-    btnTools.textContent = "Tools";
-    btnTools.addEventListener("click", function () {
-      setRouteHomeTools();
-    });
-    const btnReadme = document.createElement("button");
-    btnReadme.type = "button";
-    btnReadme.className = "home-tab";
-    btnReadme.setAttribute("role", "tab");
-    btnReadme.setAttribute("aria-selected", tabReadme ? "true" : "false");
-    btnReadme.textContent = "Readme";
-    btnReadme.addEventListener("click", function () {
-      setRouteHomeReadme();
-    });
-    tabs.appendChild(btnTools);
-    tabs.appendChild(btnReadme);
+    for (let ti = 0; ti < activeFirst.length; ti++) {
+      const key = activeFirst[ti];
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "home-tab";
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", key === tab ? "true" : "false");
+      btn.textContent = tabLabel[key];
+      btn.addEventListener("click", goTab[key]);
+      tabs.appendChild(btn);
+    }
     inner.appendChild(tabs);
 
-    const tools = data.tools.filter(matchesFilter);
-
-    if (tabTools) {
-      appendToolsSections(inner, tools);
-    }
-
-    if (tabReadme) {
+    if (tab === "tools") {
+      appendToolsSections(inner, filtered);
+    } else if (tab === "readme") {
       const prose = document.createElement("article");
       prose.className = "prose";
       prose.innerHTML = home.readmeHtml || '<p class="muted">No repo readme in build.</p>';
       inner.appendChild(prose);
+    } else if (tab === "tags") {
+      appendHomeTagsView(inner, tagIndex);
     }
 
     main.appendChild(inner);
@@ -558,13 +706,16 @@
     if (route.view === "home") {
       const filtered = data.tools.filter(matchesFilter);
       const groups = groupByIntent(filtered);
+      const tagIndex = buildHomeTagIndex(filtered);
 
       if (route.tab === "readme") {
         renderRightRailHomeReadme((data.home && data.home.toc) || []);
+      } else if (route.tab === "tags") {
+        renderRightRailHomeTags(tagIndex);
       } else {
         renderRightRailHomeTools(groups);
       }
-      renderHomeMain(route);
+      renderHomeMain(route, { filtered: filtered, tagIndex: tagIndex });
       main.scrollTop = 0;
       return;
     }

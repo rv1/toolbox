@@ -322,6 +322,7 @@ a:hover {
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
+/* One “sheet” for article + TOC: shared edge, two independent scrollers inside. */
 .content-stage {
   grid-column: 2;
   min-height: 0;
@@ -329,6 +330,12 @@ a:hover {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--toc-w);
   align-content: stretch;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 0.4rem 0.55rem 0.55rem 0.1rem;
 }
 
 .main {
@@ -341,8 +348,9 @@ a:hover {
   overflow-x: hidden;
   scroll-padding-top: 12px;
   -webkit-overflow-scrolling: touch;
-  background: var(--bg);
+  background: transparent;
   box-sizing: border-box;
+  scrollbar-gutter: stable;
 }
 
 .main-inner {
@@ -360,8 +368,8 @@ a:hover {
   margin: 0;
   padding: 0;
   border: none;
-  border-left: 1px solid var(--border);
-  background: var(--bg);
+  background: transparent;
+  box-shadow: inset 1px 0 0 var(--border);
 }
 
 .right-rail-scroll {
@@ -373,6 +381,7 @@ a:hover {
   font-size: 0.88rem;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
+  scrollbar-gutter: stable;
 }
 
 .right-rail h2 {
@@ -526,6 +535,61 @@ a:hover {
   background: var(--nav-active);
   border-color: var(--accent);
   font-weight: 600;
+}
+
+.home-tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 40rem;
+}
+
+.home-tag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.15rem 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: 0.75rem;
+}
+
+.home-tag-name {
+  font-weight: 500;
+  color: var(--text);
+  min-width: 0;
+  word-break: break-word;
+}
+
+.home-tag-row-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.home-tag-count {
+  min-width: 1.5rem;
+  text-align: right;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.home-tag-filter-btn {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.home-tag-filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .tool-category-section {
@@ -720,6 +784,10 @@ a:hover {
     grid-column: 1;
     min-height: 0;
     grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 
   .main {
