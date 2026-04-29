@@ -143,28 +143,30 @@
 
   function scrollHeadingIntoView(el) {
     if (!el) return;
-    const articleEl = $("#main-article");
-    if (articleEl && articleEl.scrollHeight > articleEl.clientHeight + 1) {
+    const mainEl = $("#main");
+    if (mainEl && mainEl.scrollHeight > mainEl.clientHeight + 1) {
       const delta =
-        el.getBoundingClientRect().top - articleEl.getBoundingClientRect().top - 12;
-      articleEl.scrollBy({ top: delta, behavior: "smooth" });
+        el.getBoundingClientRect().top - mainEl.getBoundingClientRect().top - 12;
+      mainEl.scrollBy({ top: delta, behavior: "smooth" });
     } else {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
 
   /**
-   * Apply tag as sidebar search filter, go to Tools home, re-render.
+   * Apply tag as sidebar search filter.
+   * By default, navigate to Tools home; can keep current route.
    * On mobile: open nav drawer after navigation without focusing search (no keyboard).
    */
-  function applyTagFilter(tag) {
+  function applyTagFilter(tag, opts) {
+    const keepRoute = opts && opts.keepRoute;
     filterText = tag;
     const search = $("#tool-search");
     if (search) {
       search.value = tag;
     }
     updateClearVisibility();
-    if (window.location.hash === "#/home/tools") {
+    if (keepRoute || window.location.hash === "#/home/tools") {
       render();
     } else {
       window.location.hash = "#/home/tools";
