@@ -5,50 +5,51 @@
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code", monospace;
-  --radius: 10px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --radius: 8px;
+  --shadow: none;
   --header-h: 52px;
   --toc-w: 13rem;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #fbfbfd;
+  /* Canvas: reading column + TOC. Elevated: sidebar, bar, cards. */
+  --bg: #f4f5f7;
   --surface: #ffffff;
-  --text: #1b1f24;
-  --muted: #59636e;
-  --border: #d8dee4;
+  --text: #1a1d21;
+  --muted: #5c6169;
+  --border: #dfe1e6;
   --accent: #0969da;
   --accent-muted: #0550ae;
-  --nav-active: #ddf4ff;
-  --code-bg: #f0f3f6;
+  --nav-active: #e8eaed;
+  --code-bg: #edeff2;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
   --bg: #0d1117;
-  --surface: #161b22;
+  --surface: #12181f;
   --text: #e6edf3;
   --muted: #8b949e;
-  --border: #30363d;
+  --border: #2d333b;
   --accent: #58a6ff;
   --accent-muted: #79c0ff;
-  --nav-active: #1f2a36;
-  --code-bg: #21262d;
+  --nav-active: #1c242e;
+  --code-bg: #1c232d;
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: light;
-    --bg: #fbfbfd;
+    --bg: #f4f5f7;
     --surface: #ffffff;
-    --text: #1b1f24;
-    --muted: #59636e;
-    --border: #d8dee4;
+    --text: #1a1d21;
+    --muted: #5c6169;
+    --border: #dfe1e6;
     --accent: #0969da;
     --accent-muted: #0550ae;
-    --nav-active: #ddf4ff;
-    --code-bg: #f0f3f6;
+    --nav-active: #e8eaed;
+    --code-bg: #edeff2;
   }
 }
 
@@ -56,14 +57,14 @@
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: dark;
     --bg: #0d1117;
-    --surface: #161b22;
+    --surface: #12181f;
     --text: #e6edf3;
     --muted: #8b949e;
-    --border: #30363d;
+    --border: #2d333b;
     --accent: #58a6ff;
     --accent-muted: #79c0ff;
-    --nav-active: #1f2a36;
-    --code-bg: #21262d;
+    --nav-active: #1c242e;
+    --code-bg: #1c232d;
   }
 }
 
@@ -223,7 +224,7 @@ a:hover {
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--code-bg);
   color: var(--text);
 }
 
@@ -263,8 +264,8 @@ a:hover {
 .tool-search {
   font: inherit;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
+  border-radius: 6px;
+  background: var(--code-bg);
   color: var(--text);
 }
 
@@ -322,7 +323,7 @@ a:hover {
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
-/* One “sheet” for article + TOC: shared edge, two independent scrollers inside. */
+/* Main + TOC share the canvas (no rounded “card”); sidebar/topbar are elevated. */
 .content-stage {
   grid-column: 2;
   min-height: 0;
@@ -331,11 +332,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr) var(--toc-w);
   align-content: stretch;
   align-items: stretch;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin: 0.4rem 0.55rem 0.55rem 0.1rem;
+  background: var(--bg);
 }
 
 .main {
@@ -348,7 +345,7 @@ a:hover {
   overflow-x: hidden;
   scroll-padding-top: 12px;
   -webkit-overflow-scrolling: touch;
-  background: transparent;
+  background: var(--bg);
   box-sizing: border-box;
   scrollbar-gutter: stable;
 }
@@ -368,8 +365,8 @@ a:hover {
   margin: 0;
   padding: 0;
   border: none;
-  background: transparent;
-  box-shadow: inset 1px 0 0 var(--border);
+  border-left: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .right-rail-scroll {
@@ -377,7 +374,7 @@ a:hover {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 1.1rem 2rem 0.9rem;
+  padding: 1rem 1.25rem 2rem 1rem;
   font-size: 0.88rem;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
@@ -491,17 +488,18 @@ a:hover {
 
 .tag {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--code-bg);
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   cursor: pointer;
 }
 
 .tag:hover {
-  border-color: var(--accent);
+  border-color: var(--muted);
+  background: var(--code-bg);
 }
 
 .home-lead {
@@ -517,23 +515,25 @@ a:hover {
 }
 
 .home-tab {
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   cursor: pointer;
 }
 
 .home-tab:hover {
-  border-color: var(--accent);
+  border-color: var(--border);
+  background: var(--code-bg);
 }
 
 .home-tab[aria-selected="true"] {
-  background: var(--nav-active);
+  background: var(--surface);
   border-color: var(--accent);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -582,14 +582,14 @@ a:hover {
   padding: 0.25rem 0.5rem;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   cursor: pointer;
 }
 
 .home-tag-filter-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--muted);
+  background: var(--code-bg);
 }
 
 .tool-category-section {
@@ -613,17 +613,16 @@ a:hover {
 .tool-card {
   display: flex;
   flex-direction: column;
-  padding: 1rem 1.1rem;
+  padding: 1rem 1rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 6px;
   background: var(--surface);
-  box-shadow: var(--shadow);
   color: inherit;
   width: 100%;
 }
 
 .tool-card:hover {
-  border-color: var(--accent);
+  border-color: var(--muted);
   text-decoration: none;
 }
 
@@ -664,9 +663,9 @@ a:hover {
 
 .tool-chip {
   display: inline-block;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: var(--code-bg);
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  background: transparent;
   border: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.72rem;
@@ -784,10 +783,6 @@ a:hover {
     grid-column: 1;
     min-height: 0;
     grid-template-columns: minmax(0, 1fr);
-    margin: 0;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
   }
 
   .main {
