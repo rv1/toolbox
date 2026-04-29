@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main-article">Skip to content</a>
     <div class="layout">
       <header class="topbar">
         <div class="topbar-left">
@@ -46,17 +46,22 @@
                 ×
               </button>
             </div>
-            <nav class="nav-home" id="nav-home" aria-label="Home">
+            <nav class="nav-home" id="nav-home" aria-label="Home and tags">
               <a href="#/home/tools" class="nav-home-link">Home</a>
+              <a href="#/tags" class="nav-tags-link">Tags</a>
             </nav>
             <nav id="nav-tree" class="nav-tree" aria-label="Tools"></nav>
           </div>
         </aside>
         <div class="content-stage">
-          <main id="main" class="main" tabindex="-1"></main>
-          <aside id="right-rail" class="right-rail" aria-label="On this page">
-            <div class="right-rail-scroll" id="right-rail-scroll"></div>
-          </aside>
+          <main id="main" class="main">
+            <div class="main-content-shell">
+              <div id="main-article" class="main-article" tabindex="-1"></div>
+              <aside id="right-rail" class="right-rail" aria-label="On this page">
+                <div class="right-rail-scroll" id="right-rail-scroll"></div>
+              </aside>
+            </div>
+          </main>
         </div>
       </div>
     </div>

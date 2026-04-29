@@ -300,6 +300,9 @@ a:hover {
 }
 
 .nav-home {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
   margin-bottom: 0.65rem;
 }
 
@@ -323,24 +326,64 @@ a:hover {
   box-shadow: inset 3px 0 0 var(--accent);
 }
 
-/* Main + TOC share the canvas (no rounded “card”); sidebar/topbar are elevated. */
+.nav-tags-link {
+  display: block;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav-tags-link:hover {
+  background: var(--nav-active);
+  text-decoration: none;
+}
+
+.nav-tags-link.active {
+  background: var(--nav-active);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+/* Main column + floating TOC: both scroll; gap between columns; no vertical rule on article. */
 .content-stage {
   grid-column: 2;
   min-height: 0;
   overflow: hidden;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--toc-w);
-  align-content: stretch;
-  align-items: stretch;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
 }
 
 .main {
-  grid-column: 1;
-  min-width: 0;
+  flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   padding: 0;
   margin: 0;
+  background: var(--bg);
+  box-sizing: border-box;
+}
+
+.main-content-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 0 1rem 0 0;
+  box-sizing: border-box;
+}
+
+.main-article {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-padding-top: 12px;
@@ -357,16 +400,16 @@ a:hover {
 }
 
 .right-rail {
-  grid-column: 2;
+  width: var(--toc-w);
+  flex-shrink: 0;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   margin: 0;
-  padding: 0;
+  padding: 0.5rem 0;
   border: none;
-  border-left: 1px solid var(--border);
-  background: var(--bg);
+  background: transparent;
 }
 
 .right-rail-scroll {
@@ -374,11 +417,14 @@ a:hover {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 1rem 1.25rem 2rem 1rem;
+  padding: 0.85rem 0.85rem 1.75rem 0.85rem;
   font-size: 0.88rem;
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
   scrollbar-gutter: stable;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
 }
 
 .right-rail h2 {
@@ -488,12 +534,12 @@ a:hover {
 
 .tag {
   display: inline-block;
-  padding: 0.12rem 0.4rem;
-  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   cursor: pointer;
 }
 
@@ -515,13 +561,13 @@ a:hover {
 }
 
 .home-tab {
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   cursor: pointer;
 }
 
@@ -615,7 +661,7 @@ a:hover {
   flex-direction: column;
   padding: 1rem 1rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--surface);
   color: inherit;
   width: 100%;
@@ -663,9 +709,9 @@ a:hover {
 
 .tool-chip {
   display: inline-block;
-  padding: 0.12rem 0.4rem;
-  border-radius: 4px;
-  background: transparent;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--code-bg);
   border: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.72rem;
@@ -701,6 +747,14 @@ a:hover {
   font-size: 0.78rem;
   gap: 0.35rem 0.75rem;
   margin: 0 0 0.5rem;
+}
+
+.tags-page-title {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .prose {
@@ -782,11 +836,11 @@ a:hover {
   .content-stage {
     grid-column: 1;
     min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
   }
 
-  .main {
-    grid-column: 1;
+  .main-content-shell {
+    gap: 0;
+    padding-right: 0;
   }
 
   .right-rail {

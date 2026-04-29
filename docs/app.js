@@ -35,6 +35,10 @@
     const h = window.location.hash;
     if (!h || h === "#" || h === "#/") {
       history.replaceState(null, "", "#/home/tools");
+      return;
+    }
+    if (h === "#/home/tags") {
+      history.replaceState(null, "", "#/tags");
     }
   }
 
@@ -44,12 +48,15 @@
     if (parts[0] === "tool" && parts[1]) {
       return { view: "tool", slug: decodeURIComponent(parts[1]) };
     }
+    if (parts[0] === "tags") {
+      return { view: "tags" };
+    }
     if (parts[0] === "home") {
       if (parts[1] === "readme") {
         return { view: "home", tab: "readme" };
       }
       if (parts[1] === "tags") {
-        return { view: "home", tab: "tags" };
+        return { view: "tags" };
       }
       return { view: "home", tab: "tools" };
     }
@@ -64,8 +71,8 @@
     window.location.hash = "#/home/readme";
   }
 
-  function setRouteHomeTags() {
-    window.location.hash = "#/home/tags";
+  function setRouteTags() {
+    window.location.hash = "#/tags";
   }
 
   function setRouteTool(slug) {
@@ -136,13 +143,36 @@
 
   function scrollHeadingIntoView(el) {
     if (!el) return;
-    const mainEl = $("#main");
-    if (mainEl && mainEl.scrollHeight > mainEl.clientHeight + 1) {
+    const articleEl = $("#main-article");
+    if (articleEl && articleEl.scrollHeight > articleEl.clientHeight + 1) {
       const delta =
-        el.getBoundingClientRect().top - mainEl.getBoundingClientRect().top - 12;
-      mainEl.scrollBy({ top: delta, behavior: "smooth" });
+        el.getBoundingClientRect().top - articleEl.getBoundingClientRect().top - 12;
+      articleEl.scrollBy({ top: delta, behavior: "smooth" });
     } else {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  /**
+   * Apply tag as sidebar search filter, go to Tools home, re-render.
+   * On mobile: open nav drawer after navigation without focusing search (no keyboard).
+   */
+  function applyTagFilter(tag) {
+    filterText = tag;
+    const search = $("#tool-search");
+    if (search) {
+      search.value = tag;
+    }
+    updateClearVisibility();
+    if (window.location.hash === "#/home/tools") {
+      render();
+    } else {
+      window.location.hash = "#/home/tools";
+    }
+    if (window.matchMedia("(max-width: 960px)").matches) {
+      setTimeout(function () {
+        openDrawer();
+      }, 0);
     }
   }
 
@@ -213,21 +243,7 @@
         b.className = "tag";
         b.textContent = tag;
         b.addEventListener("click", function () {
-          filterText = tag;
-          const search = $("#tool-search");
-          if (search) search.value = tag;
-          updateClearVisibility();
-          render();
-          if (window.matchMedia("(max-width: 960px)").matches) {
-            openDrawer();
-            if (search) {
-              try {
-                search.focus({ preventScroll: true });
-              } catch (e) {
-                search.focus();
-              }
-            }
-          }
+          applyTagFilter(tag);
         });
         wrap.appendChild(b);
       } else {
@@ -255,6 +271,17 @@
       homeLink.onclick = function (e) {
         e.preventDefault();
         setRouteHomeTools();
+        closeDrawer();
+      };
+    }
+
+    const tagsLink = $(".nav-tags-link");
+    if (tagsLink) {
+      tagsLink.classList.toggle("active", route.view === "tags");
+      tagsLink.href = "#/tags";
+      tagsLink.onclick = function (e) {
+        e.preventDefault();
+        setRouteTags();
         closeDrawer();
       };
     }
@@ -558,25 +585,7 @@
       filterBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         e.preventDefault();
-        filterText = row.tag;
-        const search = $("#tool-search");
-        if (search) {
-          search.value = row.tag;
-        }
-        updateClearVisibility();
-        setRouteHomeTools();
-        if (window.matchMedia("(max-width: 960px)").matches) {
-          setTimeout(function () {
-            openDrawer();
-            if (search) {
-              try {
-                search.focus({ preventScroll: true });
-              } catch (ex) {
-                search.focus();
-              }
-            }
-          }, 0);
-        }
+        applyTagFilter(row.tag);
       });
       right.appendChild(countEl);
       right.appendChild(filterBtn);
@@ -588,46 +597,65 @@
   }
 
   /**
+   * @param {{ tag: string, count: number, anchorId: string }[]} tagIndex
+   */
+  function renderTagsMain(tagIndex) {
+    const article = $("#main-article");
+    if (!article || !data) {
+      return;
+    }
+    article.innerHTML = "";
+    const inner = document.createElement("div");
+    inner.className = "main-inner";
+    const h = document.createElement("h1");
+    h.className = "tags-page-title";
+    h.textContent = "Tags";
+    inner.appendChild(h);
+    appendHomeTagsView(inner, tagIndex);
+    article.appendChild(inner);
+    document.title = "Tags · toolbox";
+  }
+
+  /**
    * @param {{ view: 'home' }} route
-   * @param {{ filtered: any[], tagIndex: { tag: string, count: number, anchorId: string }[] }} homeContext
+   * @param {{ filtered: any[] }} homeContext
    */
   function renderHomeMain(route, homeContext) {
-    const main = $("#main");
-    if (!main || !data) {
+    const article = $("#main-article");
+    if (!article || !data) {
       return;
     }
 
-    main.innerHTML = "";
+    article.innerHTML = "";
     const inner = document.createElement("div");
     inner.className = "main-inner";
 
     const home = data.home || { readmeHtml: "", toc: [] };
     const tab = route.tab;
     const filtered = homeContext.filtered;
-    const tagIndex = homeContext.tagIndex;
-
-    const activeFirst = [tab].concat(
-      ["tools", "readme", "tags"].filter(function (k) {
-        return k !== tab;
-      })
-    );
-    const tabLabel = { tools: "Tools", readme: "Readme", tags: "Tags" };
-    const goTab = { tools: setRouteHomeTools, readme: setRouteHomeReadme, tags: setRouteHomeTags };
 
     const tabs = document.createElement("div");
     tabs.className = "home-tabs";
     tabs.setAttribute("role", "tablist");
-    for (let ti = 0; ti < activeFirst.length; ti++) {
-      const key = activeFirst[ti];
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "home-tab";
-      btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", key === tab ? "true" : "false");
-      btn.textContent = tabLabel[key];
-      btn.addEventListener("click", goTab[key]);
-      tabs.appendChild(btn);
-    }
+
+    const btnTools = document.createElement("button");
+    btnTools.type = "button";
+    btnTools.className = "home-tab";
+    btnTools.setAttribute("role", "tab");
+    btnTools.setAttribute("aria-selected", tab === "tools" ? "true" : "false");
+    btnTools.textContent = "Tools";
+    btnTools.addEventListener("click", setRouteHomeTools);
+
+    const btnReadme = document.createElement("button");
+    btnReadme.type = "button";
+    btnReadme.className = "home-tab";
+    btnReadme.setAttribute("role", "tab");
+    btnReadme.setAttribute("aria-selected", tab === "readme" ? "true" : "false");
+    btnReadme.textContent = "Readme";
+    btnReadme.addEventListener("click", setRouteHomeReadme);
+
+    tabs.appendChild(btnTools);
+    tabs.appendChild(btnReadme);
     inner.appendChild(tabs);
 
     if (tab === "tools") {
@@ -637,11 +665,9 @@
       prose.className = "prose";
       prose.innerHTML = home.readmeHtml || '<p class="muted">No repo readme in build.</p>';
       inner.appendChild(prose);
-    } else if (tab === "tags") {
-      appendHomeTagsView(inner, tagIndex);
     }
 
-    main.appendChild(inner);
+    article.appendChild(inner);
     document.title = "toolbox";
   }
 
@@ -698,25 +724,31 @@
   }
 
   function renderMain() {
-    const main = $("#main");
-    if (!main || !data) return;
+    const article = $("#main-article");
+    if (!article || !data) return;
     normalizeHash();
     const route = parseRoute();
+
+    if (route.view === "tags") {
+      const filtered = data.tools.filter(matchesFilter);
+      const tagIndex = buildHomeTagIndex(filtered);
+      renderRightRailHomeTags(tagIndex);
+      renderTagsMain(tagIndex);
+      article.scrollTop = 0;
+      return;
+    }
 
     if (route.view === "home") {
       const filtered = data.tools.filter(matchesFilter);
       const groups = groupByIntent(filtered);
-      const tagIndex = buildHomeTagIndex(filtered);
 
       if (route.tab === "readme") {
         renderRightRailHomeReadme((data.home && data.home.toc) || []);
-      } else if (route.tab === "tags") {
-        renderRightRailHomeTags(tagIndex);
       } else {
         renderRightRailHomeTools(groups);
       }
-      renderHomeMain(route, { filtered: filtered, tagIndex: tagIndex });
-      main.scrollTop = 0;
+      renderHomeMain(route, { filtered: filtered });
+      article.scrollTop = 0;
       return;
     }
 
@@ -725,7 +757,7 @@
     });
     if (!tool) {
       renderRightRailPlaceholder("Select a tool or search.");
-      main.innerHTML = "";
+      article.innerHTML = "";
       const inner = document.createElement("div");
       inner.className = "main-inner";
       inner.innerHTML =
@@ -734,21 +766,21 @@
         e.preventDefault();
         setRouteHomeTools();
       });
-      main.appendChild(inner);
+      article.appendChild(inner);
       document.title = "Not found · toolbox";
       return;
     }
 
     renderRightRailToolToc(tool);
-    main.innerHTML = "";
+    article.innerHTML = "";
 
     const inner = document.createElement("div");
     inner.className = "main-inner";
     renderToolArticle(inner, tool);
 
-    main.appendChild(inner);
+    article.appendChild(inner);
     document.title = (tool.name || tool.slug) + " · toolbox";
-    main.scrollTop = 0;
+    article.scrollTop = 0;
   }
 
   function render() {
@@ -787,8 +819,11 @@
     normalizeHash();
     const res = await fetch("./tools.json", { cache: "no-store" });
     if (!res.ok) {
-      $("#main").innerHTML =
-        '<div class="main-inner"><p class="muted">Could not load tools.json. Run <code>node scripts/build-site.mjs</code> then refresh.</p></div>';
+      const art = $("#main-article");
+      if (art) {
+        art.innerHTML =
+          '<div class="main-inner"><p class="muted">Could not load tools.json. Run <code>node scripts/build-site.mjs</code> then refresh.</p></div>';
+      }
       $("#nav-tree").innerHTML = "";
       const rr = $("#right-rail-scroll");
       if (rr) rr.innerHTML = "";
