@@ -184,6 +184,16 @@
           if (search) search.value = tag;
           updateClearVisibility();
           render();
+          if (window.matchMedia("(max-width: 960px)").matches) {
+            openDrawer();
+            if (search) {
+              try {
+                search.focus({ preventScroll: true });
+              } catch (e) {
+                search.focus();
+              }
+            }
+          }
         });
         wrap.appendChild(b);
       } else {
@@ -318,6 +328,81 @@
     rail.innerHTML = '<p class="muted" style="margin:0">' + escapeHtml(msg) + "</p>";
   }
 
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  /**
+   * @param {any} tool
+   * @param {{ compact?: boolean }} [opts]
+   * @returns {HTMLDivElement}
+   */
+  function createToolMetaRowElement(tool, opts) {
+    const compact = opts && opts.compact;
+    const metaRow = document.createElement("div");
+    metaRow.className = "meta-row" + (compact ? " meta-row--card" : "");
+    metaRow.innerHTML =
+      "<span><strong>Intent</strong> " +
+      escapeHtml(tool.intent) +
+      "</span>" +
+      "<span><strong>Runtime</strong> " +
+      escapeHtml(tool.runtime) +
+      "</span>" +
+      "<span><strong>Status</strong> " +
+      escapeHtml(tool.status) +
+      "</span>";
+    return metaRow;
+  }
+
+  /**
+   * @param {any} t tool record from tools.json
+   * @returns {HTMLAnchorElement}
+   */
+  function createHomeToolCard(t) {
+    const a = document.createElement("a");
+    a.className = "tool-card";
+    a.href = "#/tool/" + encodeURIComponent(t.slug);
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      setRouteTool(t.slug);
+    });
+
+    const mainEl = document.createElement("div");
+    mainEl.className = "tool-card-main";
+    const h = document.createElement("h2");
+    h.textContent = t.name || t.slug;
+    mainEl.appendChild(h);
+    mainEl.appendChild(createToolMetaRowElement(t, { compact: true }));
+
+    const desc = document.createElement("p");
+    desc.className = "tool-card-desc";
+    desc.textContent = t.description || "";
+    mainEl.appendChild(desc);
+
+    a.appendChild(mainEl);
+
+    const tagList = t.tags || [];
+    if (tagList.length > 0) {
+      const foot = document.createElement("div");
+      foot.className = "tool-card-footer";
+      const tagsEl = document.createElement("div");
+      tagsEl.className = "tool-card-tags";
+      for (let k = 0; k < tagList.length; k++) {
+        const chip = document.createElement("span");
+        chip.className = "tool-chip";
+        chip.textContent = tagList[k];
+        tagsEl.appendChild(chip);
+      }
+      foot.appendChild(tagsEl);
+      a.appendChild(foot);
+    }
+    return a;
+  }
+
   function appendToolsSections(container, tools) {
     const lead = document.createElement("p");
     lead.className = "home-lead";
@@ -344,25 +429,7 @@
         return a.slug.localeCompare(b.slug);
       });
       for (let i = 0; i < sorted.length; i++) {
-        const t = sorted[i];
-        const a = document.createElement("a");
-        a.className = "tool-card";
-        a.href = "#/tool/" + encodeURIComponent(t.slug);
-        a.addEventListener("click", function (e) {
-          e.preventDefault();
-          setRouteTool(t.slug);
-        });
-        const h = document.createElement("h2");
-        h.textContent = t.name || t.slug;
-        const meta = document.createElement("div");
-        meta.className = "meta";
-        meta.textContent = [t.intent, t.runtime, t.status].filter(Boolean).join(" · ");
-        const p = document.createElement("p");
-        p.textContent = t.description || "";
-        a.appendChild(h);
-        a.appendChild(meta);
-        a.appendChild(p);
-        grid.appendChild(a);
+        grid.appendChild(createHomeToolCard(sorted[i]));
       }
       sec.appendChild(grid);
       container.appendChild(sec);
@@ -441,19 +508,7 @@
     h1.textContent = tool.name || tool.slug;
     header.appendChild(h1);
 
-    const metaRow = document.createElement("div");
-    metaRow.className = "meta-row";
-    metaRow.innerHTML =
-      "<span><strong>Intent</strong> " +
-      escapeHtml(tool.intent) +
-      "</span>" +
-      "<span><strong>Runtime</strong> " +
-      escapeHtml(tool.runtime) +
-      "</span>" +
-      "<span><strong>Status</strong> " +
-      escapeHtml(tool.status) +
-      "</span>";
-    header.appendChild(metaRow);
+    header.appendChild(createToolMetaRowElement(tool, {}));
 
     const tagHost = document.createElement("div");
     tagHost.className = "article-tags";
@@ -543,14 +598,6 @@
     main.appendChild(inner);
     document.title = (tool.name || tool.slug) + " · toolbox";
     main.scrollTop = 0;
-  }
-
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
   }
 
   function render() {
